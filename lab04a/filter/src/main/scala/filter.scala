@@ -3,7 +3,7 @@ import org.apache.spark.sql.types.{StructType, StringType, LongType, IntegerType
 import org.apache.spark.sql.functions.{from_json, from_unixtime, col}
 
 object filter extends App{
-  val spark = SparkSession.builder().appName("lab04_yv").master("yarn").getOrCreate()
+  val spark = SparkSession.builder().appName("lab04_yv").getOrCreate()
   import spark.implicits._
 
   val topic_name = spark.conf.get("spark.filter.topic_name")

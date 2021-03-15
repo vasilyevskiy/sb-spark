@@ -7,7 +7,7 @@ object filter extends App{
   import spark.implicits._
 
   val topic_name = spark.conf.get("spark.filter.topic_name")
-  val offset = spark.conf.get("spark.filter.offset")
+  val offset = if (spark.conf.get("spark.filter.offset") == "earliest") -2 else spark.conf.get("spark.filter.offset")
   val output_dir_prefix = spark.conf.get("spark.filter.output_dir_prefix")
 
   val schema = new StructType()

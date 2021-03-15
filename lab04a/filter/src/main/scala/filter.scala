@@ -36,13 +36,13 @@ object filter extends App{
 
   df.filter(col("event_type") === "view")
     .write
-    .mode("overwrite")
+    .mode("append")
     .partitionBy("p_date")
     .json(s"$output_dir_prefix/view")
 
   df.filter(col("event_type") === "buy")
     .write
-    .mode("overwrite")
+    .mode("append")
     .partitionBy("p_date")
     .json(s"$output_dir_prefix/buy")
 

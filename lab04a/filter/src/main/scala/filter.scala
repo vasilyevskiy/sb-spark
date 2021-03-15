@@ -21,8 +21,7 @@ object filter extends App{
   val kafkaParams = Map(
     "kafka.bootstrap.servers" -> "spark-master-1:6667",
     "subscribe" -> s"$topic_name",
-    "startingOffsets" -> s""" { "$topic_name": { "0": $offset } } """,
-    "endingOffsets" -> """latest"""
+    "startingOffsets" -> s""" { "$topic_name": { "0": $offset } } """
   )
 
   val df = spark
@@ -36,13 +35,13 @@ object filter extends App{
 
   df.filter(col("event_type") === "view")
     .write
-    .mode("append")
+    //.mode("append")
     .partitionBy("p_date")
     .json(s"$output_dir_prefix/view")
 
   df.filter(col("event_type") === "buy")
     .write
-    .mode("append")
+    //.mode("append")
     .partitionBy("p_date")
     .json(s"$output_dir_prefix/buy")
 

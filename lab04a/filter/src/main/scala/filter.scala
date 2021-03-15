@@ -21,7 +21,7 @@ object filter extends App{
   val kafkaParams = Map(
     "kafka.bootstrap.servers" -> "spark-master-1:6667",
     "subscribe" -> s"$topic_name",
-    "startingOffsets" -> s"""$offset""",
+    "startingOffsets" -> s""" { "$topic_name": { "0": $offset } } """,
     "endingOffsets" -> """latest"""
   )
 

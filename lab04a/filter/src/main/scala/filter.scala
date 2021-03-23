@@ -1,6 +1,8 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{StructType, StringType, LongType, IntegerType}
-import org.apache.spark.sql.functions.{from_json, from_unixtime, col}
+import org.apache.spark.sql.functions.{from_json, date_format, col, udf}
+import java.util.Date
+import java.util.TimeZone
 
 object filter extends App{
   val spark = SparkSession.builder().appName("lab04_yv").getOrCreate()
@@ -24,6 +26,11 @@ object filter extends App{
     "startingOffsets" -> s""" { "$topic_name": { "0": $offset } } """
   )
 
+  val getDate = udf {(timestamp : Long) =>
+    val sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"))
+    sdf.format(new Date(timestamp))}
+
   val df = spark
     .read.format("kafka")
     .options(kafkaParams)
@@ -31,17 +38,17 @@ object filter extends App{
     .select('value.cast("string")).as[String]
     .select(from_json(col("value"), schema).as("data"))
     .select("data.*")
-    .withColumn("p_date", from_unixtime(col("timestamp")/1000,"yyyyMMdd"))
+    .withColumn("p_date", date_format(getDate(col("timestamp")), "yyyyMMdd"))
 
   df.filter(col("event_type") === "view")
     .write
-    //.mode("append")
+    .mode("overwrite")
     .partitionBy("p_date")
     .json(s"$output_dir_prefix/view")
 
   df.filter(col("event_type") === "buy")
     .write
-    //.mode("append")
+    .mode("overwrite")
     .partitionBy("p_date")
     .json(s"$output_dir_prefix/buy")
 

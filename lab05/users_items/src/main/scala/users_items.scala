@@ -46,7 +46,7 @@ object users_items extends App{
    // val status = fs.listStatus(new Path(output_dir))
    // val path = status(0).getPath().getName()
     val last_matrix = spark.read.parquet(s"$output_dir/20200429")
-    val result = last_matrix.join(users_x_items,  col("uid"), "left")
+    val result = last_matrix.join(users_x_items,  Seq("uid"), "left")
     result.coalesce(1)
           .write.mode("overwrite")
           .parquet(s"$output_dir/$max_date")

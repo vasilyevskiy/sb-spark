@@ -2,7 +2,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+//import org.apache.hadoop.fs.{FileSystem, Path}
 
 object users_items extends App{
   val spark = SparkSession.builder().appName("lab05_yv").getOrCreate()
@@ -42,10 +42,10 @@ object users_items extends App{
       .mode("overwrite")
       .parquet(s"$output_dir/$max_date")
   } else {
-    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    val status = fs.listStatus(new Path(output_dir))
-    val path = status(0).getPath().getName()
-    val last_matrix = spark.read.parquet(s"$output_dir/$path")
+   // val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+   // val status = fs.listStatus(new Path(output_dir))
+   // val path = status(0).getPath().getName()
+    val last_matrix = spark.read.parquet(s"$output_dir/20200429")
     val result = last_matrix.join(users_x_items,  col("uid"), "left")
     result.coalesce(1)
           .write.mode("overwrite")

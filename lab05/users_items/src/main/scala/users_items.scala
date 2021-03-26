@@ -1,8 +1,6 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions._
-import org.apache.hadoop.conf.Configuration
-//import org.apache.hadoop.fs.{FileSystem, Path}
 
 object users_items extends App{
   val spark = SparkSession.builder().appName("lab05_yv").getOrCreate()
@@ -11,6 +9,13 @@ object users_items extends App{
   val mode: Integer = spark.conf.get("spark.users_items.update").toInt
   val input_dir = spark.conf.get("spark.users_items.input_dir")
   val output_dir = spark.conf.get("spark.users_items.output_dir")
+
+  def expr(myCols: Set[String], allCols: Set[String]) = {
+    allCols.toList.map(x => x match {
+      case x if myCols.contains(x) => col(x)
+      case _ => lit(null).as(x)
+    })
+  }
 
   val input_views_df = spark
     .read
@@ -42,14 +47,18 @@ object users_items extends App{
       .mode("overwrite")
       .parquet(s"$output_dir/$max_date")
   } else {
-   // val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-   // val status = fs.listStatus(new Path(output_dir))
-   // val path = status(0).getPath().getName()
     val last_matrix = spark.read.parquet(s"$output_dir/20200429")
-    val result = last_matrix.join(users_x_items,  Seq("uid"), "left")
-    result.coalesce(1)
-          .write.mode("overwrite")
-          .parquet(s"$output_dir/$max_date")
+    val old_cols = last_matrix.columns.toSet
+    val new_cols = users_x_items.columns.toSet
+    val total = old_cols ++ new_cols
+
+    val res = last_matrix.select(expr(old_cols, total):_*)
+        .union(users_x_items.select(expr(new_cols, total):_*))
+        .na.fill(0)
+
+    res.coalesce(1)
+        .write.mode("overwrite")
+        .parquet(s"$output_dir/$max_date")
   }
   union_df.unpersist()
   spark.stop()
